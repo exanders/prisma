@@ -598,19 +598,19 @@ export function getPrismaClient(config: GetPrismaClientOptions): any {
       return undefined
     }
 
-    queryRaw(stringOrTemplateStringsArray, ...args) {
+    queryRaw(strings: readonly string[], ...values: sqlTemplateTag.RawValue[]) {
       console.warn(
         `${chalk.yellow(
           'warn',
         )} prisma.queryRaw() is deprecated, please use prisma.$queryRaw() instead`,
       )
-      return this.$queryRaw(stringOrTemplateStringsArray, ...args)
+      return this.$queryRaw(strings, ...values)
     }
 
     /**
      * Executes a raw query. Always returns a number
      */
-    private async $queryRawInternal(stringOrTemplateStringsArray, ...values) {
+    private async $queryRawInternal(strings: readonly string[], ...values: sqlTemplateTag.RawValue[]) {
       let query = ''
       let parameters: any = undefined
 
@@ -618,10 +618,10 @@ export function getPrismaClient(config: GetPrismaClientOptions): any {
         (await this._getActiveProvider()) === 'postgresql' ? 'text' : 'sql'
 
       debug(`Prisma Client call:`)
-      if (Array.isArray(stringOrTemplateStringsArray)) {
+      if (Array.isArray(strings)) {
         // Called with prisma.raw\`\`
         const queryInstance = sqlTemplateTag.sqltag(
-          stringOrTemplateStringsArray as any,
+          strings,
           ...values,
         )
         query = queryInstance[sqlOutput]
@@ -629,9 +629,9 @@ export function getPrismaClient(config: GetPrismaClientOptions): any {
           values: serializeRawParameters(queryInstance.values),
           __prismaRawParamaters__: true,
         }
-      } else if ('string' === typeof stringOrTemplateStringsArray) {
+      } else if ('string' === typeof strings) {
         // Called with prisma.raw(string) or prisma.raw(string, values)
-        query = stringOrTemplateStringsArray
+        query = strings
         if (values.length) {
           parameters = {
             values: serializeRawParameters(values),
@@ -640,9 +640,9 @@ export function getPrismaClient(config: GetPrismaClientOptions): any {
         }
       } else {
         // called with prisma.raw(sql\`\`)
-        query = stringOrTemplateStringsArray[sqlOutput]
+        query = strings[sqlOutput]
         parameters = {
-          values: serializeRawParameters(stringOrTemplateStringsArray.values),
+          values: serializeRawParameters(strings.values),
           __prismaRawParamaters__: true,
         }
       }
@@ -667,9 +667,9 @@ export function getPrismaClient(config: GetPrismaClientOptions): any {
     /**
      * Executes a raw query. Always returns a number
      */
-    $queryRaw(stringOrTemplateStringsArray, ...values) {
+    $queryRaw(strings: readonly string[], ...values: sqlTemplateTag.RawValue[]) {
       try {
-        const promise = this.$queryRawInternal(stringOrTemplateStringsArray, ...values)
+        const promise = this.$queryRawInternal(strings, ...values)
           ; (promise as any).isQueryRaw = true
         return promise
       } catch (e) {
