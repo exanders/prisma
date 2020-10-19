@@ -201,6 +201,7 @@ export interface GetPrismaClientOptions {
   generator?: GeneratorConfig
   sqliteDatasourceOverrides?: DatasourceOverwrite[]
   relativePath: string
+  outputDir?: string
   dirname: string
   clientVersion?: string
   engineVersion?: string

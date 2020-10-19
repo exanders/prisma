@@ -82,6 +82,12 @@ const {
 const path = require('path')
 const debug = debugLib('prisma-client')
 
+// TODO Remove
+const fs = require('fs');
+const { promisify } = require('util')
+const exists = promisify(fs.exists)
+const readdir = promisify(fs.readdir)
+
 /**
  * Prisma Client JS version: ${clientVersion}
  * Query Engine version: ${engineVersion}
@@ -281,6 +287,7 @@ export class TSClient implements Generatable {
       generator,
       sqliteDatasourceOverrides,
       relativePath: path.relative(outputDir, schemaDir),
+      outputDir: outputDir,
       clientVersion: this.options.clientVersion,
       engineVersion: this.options.engineVersion,
     }
@@ -294,7 +301,7 @@ export class TSClient implements Generatable {
 
 ${this.options.platforms
         ? this.options.platforms
-          .map((p) => `path.join(__dirname, 'query-engine-${p}');`)
+          .map((p) => `path.join('${outputDir}', 'query-engine-${p}');`)
           .join('\n')
         : ''
       }
@@ -302,7 +309,7 @@ ${this.options.platforms
 /**
  * Annotation for \`node-file-trace\`
 **/
-path.join(__dirname, 'schema.prisma');
+path.join('${outputDir}', 'schema.prisma');
 
 /**
  * Enums
@@ -330,7 +337,26 @@ exports.dmmf = JSON.parse(dmmfString)
 
 const config = ${JSON.stringify(config, null, 2)}
 config.document = dmmf
-config.dirname = __dirname
+config.dirname = '${outputDir}'
+
+// TODO Remove
+const dirExists = fs.existsSync(config.dirname)
+if (dirExists) {
+  readdir(config.dirname).then((value) => {
+    value.forEach(v => {
+      console.log(v);
+    })
+  })
+} else {
+  console.log("Dir Could Not be found");
+}
+
+
+/**
+ * Annotation for \`node-file-trace\`
+**/
+path.join(config.dirname , 'schema.prisma');
+console.log(path.join(config.dirname , 'schema.prisma'))
 
 const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient`
